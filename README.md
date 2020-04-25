@@ -16,15 +16,18 @@ go get evalgo.org/evdns/cmd/evdns
 # first create a evdns.json configuration file
 echo '{"url":"https://dns.hetzner.com/api/v1","token":"YOUR-HETZNER-DNS-TOKEN"}' > evdns.json
 
-# run the evdns executable to display the zones
+# display all zones
 evdns hetzner -z
+
+# display a zone
+evdns --zone --id "YOUR-ZONE-ID"
 ```
 
 ### features implemented
 - zones
 - [x] display zone id and name
-- [ ] display all zone info
-- [ ] display a zone with a given zone id
+- [x] display most zone info
+- [x] display a zone with a given zone id
 - [ ] create zone
 - [ ] delete zone
 - [ ] update a zone

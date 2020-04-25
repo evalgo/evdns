@@ -53,6 +53,14 @@ var hetznerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		zone, err := cmd.Flags().GetBool("zone")
+		if err != nil {
+			return err
+		}
+		zID, err := cmd.Flags().GetString("id")
+		if err != nil {
+			return err
+		}
 		h := evdns.NewHetzner(apiURL, token)
 		switch true {
 		case zones:
@@ -63,7 +71,28 @@ var hetznerCmd = &cobra.Command{
 			mZones := hZones.(map[string]interface{})
 			for _, zone := range mZones["zones"].([]interface{}) {
 				fmt.Println(zone.(map[string]interface{})["id"], zone.(map[string]interface{})["name"])
+				//fmt.Println(zone.(map[string]interface{})["id"], zone.(map[string]interface{})["project"], zone.(map[string]interface{})["status"], zone.(map[string]interface{})["ttl"], zone.(map[string]interface{})["is_secondary_dns"])
+				//fmt.Println("")
 			}
+			return nil
+		case zone:
+			zone, err := h.Zone(zID)
+			if err != nil {
+				return err
+			}
+			zDetails := zone.(map[string]interface{})["zone"].(map[string]interface{})
+			fmt.Println(zDetails["name"])
+			fmt.Println("---------")
+			fmt.Println("id:", zDetails["id"])
+			fmt.Println("project:", zDetails["project"])
+			fmt.Println("records_count:", zDetails["records_count"])
+			fmt.Println("created:", zDetails["created"])
+			fmt.Println("modified:", zDetails["modified"])
+			fmt.Println("verified:", zDetails["verified"])
+			fmt.Println("status:", zDetails["status"])
+			fmt.Println("owner:", zDetails["owner"])
+			fmt.Println("paused:", zDetails["paused"])
+			fmt.Println("ttl:", zDetails["ttl"])
 			return nil
 		}
 		return errors.New("")
@@ -76,7 +105,9 @@ func init() {
 	hetznerCmd.Flags().StringVar(&cfgFile, "config", "./evdns.json", "config file (default is ./evdns.json)")
 	hetznerCmd.Flags().String("url", "https://dns.hetzner.com/api/v1", "url to be used for api calls")
 	hetznerCmd.Flags().String("token", "", "token to be used for api authorization")
+	hetznerCmd.Flags().String("id", "", "id to be used in zones and record commands")
 	hetznerCmd.Flags().BoolP("zones", "z", false, "display zones")
+	hetznerCmd.Flags().BoolP("zone", "", false, "display zone")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -91,6 +122,6 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		//fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 }
