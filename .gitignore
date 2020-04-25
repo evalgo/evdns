@@ -4,6 +4,11 @@
 *.dll
 *.so
 *.dylib
+*~
+.DS_Store
+go-junit-report
+report.xml
+evdns.*.amd64
 
 # Test binary, built with `go test -c`
 *.test
