@@ -53,16 +53,89 @@ var hetznerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		records, err := cmd.Flags().GetBool("records")
+		if err != nil {
+			return err
+		}
 		zone, err := cmd.Flags().GetBool("zone")
 		if err != nil {
 			return err
 		}
-		zID, err := cmd.Flags().GetString("id")
+		name, err := cmd.Flags().GetString("name")
+		if err != nil {
+			return err
+		}
+		ID, err := cmd.Flags().GetString("id")
+		if err != nil {
+			return err
+		}
+		create, err := cmd.Flags().GetBool("create")
+		if err != nil {
+			return err
+		}
+		del, err := cmd.Flags().GetBool("delete")
+		if err != nil {
+			return err
+		}
+		record, err := cmd.Flags().GetBool("record")
+		if err != nil {
+			return err
+		}
+		rType, err := cmd.Flags().GetString("type")
+		if err != nil {
+			return err
+		}
+		rValue, err := cmd.Flags().GetString("value")
+		if err != nil {
+			return err
+		}
+		rTTL, err := cmd.Flags().GetInt("ttl")
 		if err != nil {
 			return err
 		}
 		h := evdns.NewHetzner(apiURL, token)
 		switch true {
+		case create:
+			switch true {
+			case zone:
+				created, err := h.NewZone(map[string]interface{}{"name": name})
+				if err != nil {
+					return err
+				}
+				zDetails := created.(map[string]interface{})["zone"].(map[string]interface{})
+				displayZone(zDetails)
+				return nil
+			case record:
+				created, err := h.NewRecord(map[string]interface{}{
+					"zone_id": ID,
+					"type":    rType,
+					"name":    name,
+					"value":   rValue,
+					"ttl":     rTTL,
+				})
+				if err != nil {
+					return err
+				}
+				displayRecord(created.(map[string]interface{})["record"].(map[string]interface{}))
+				return nil
+			}
+		case del:
+			switch true {
+			case zone:
+				deleted, err := h.DeleteZone(ID)
+				if err != nil {
+					return err
+				}
+				fmt.Println(deleted)
+				return nil
+			case record:
+				deleted, err := h.DeleteRecord(ID)
+				if err != nil {
+					return err
+				}
+				fmt.Println(deleted)
+				return nil
+			}
 		case zones:
 			hZones, err := h.Zones()
 			if err != nil {
@@ -76,27 +149,53 @@ var hetznerCmd = &cobra.Command{
 			}
 			return nil
 		case zone:
-			zone, err := h.Zone(zID)
+			zone, err := h.Zone(ID)
 			if err != nil {
 				return err
 			}
 			zDetails := zone.(map[string]interface{})["zone"].(map[string]interface{})
-			fmt.Println(zDetails["name"])
-			fmt.Println("---------")
-			fmt.Println("id:", zDetails["id"])
-			fmt.Println("project:", zDetails["project"])
-			fmt.Println("records_count:", zDetails["records_count"])
-			fmt.Println("created:", zDetails["created"])
-			fmt.Println("modified:", zDetails["modified"])
-			fmt.Println("verified:", zDetails["verified"])
-			fmt.Println("status:", zDetails["status"])
-			fmt.Println("owner:", zDetails["owner"])
-			fmt.Println("paused:", zDetails["paused"])
-			fmt.Println("ttl:", zDetails["ttl"])
+			displayZone(zDetails)
+			return nil
+		case record:
+			rec, err := h.Zone(ID)
+			if err != nil {
+				return err
+			}
+			zDetails := rec.(map[string]interface{})["record"].(map[string]interface{})
+			displayZone(zDetails)
+			return nil
+		case records:
+			hZRecords, err := h.Records(ID)
+			if err != nil {
+				return err
+			}
+			mRecords := hZRecords.(map[string]interface{})
+			for _, rec := range mRecords["records"].([]interface{}) {
+				displayRecord(rec.(map[string]interface{}))
+			}
 			return nil
 		}
 		return errors.New("")
 	},
+}
+
+func displayRecord(rDetails map[string]interface{}) {
+	fmt.Println(rDetails["zone_id"], rDetails["id"], rDetails["type"], rDetails["name"], rDetails["value"])
+}
+
+func displayZone(zDetails map[string]interface{}) {
+	fmt.Println(zDetails["name"])
+	fmt.Println("---------")
+	fmt.Println("id:", zDetails["id"])
+	fmt.Println("project:", zDetails["project"])
+	fmt.Println("records_count:", zDetails["records_count"])
+	fmt.Println("created:", zDetails["created"])
+	fmt.Println("modified:", zDetails["modified"])
+	fmt.Println("verified:", zDetails["verified"])
+	fmt.Println("status:", zDetails["status"])
+	fmt.Println("owner:", zDetails["owner"])
+	fmt.Println("paused:", zDetails["paused"])
+	fmt.Println("ttl:", zDetails["ttl"])
 }
 
 func init() {
@@ -106,8 +205,16 @@ func init() {
 	hetznerCmd.Flags().String("url", "https://dns.hetzner.com/api/v1", "url to be used for api calls")
 	hetznerCmd.Flags().String("token", "", "token to be used for api authorization")
 	hetznerCmd.Flags().String("id", "", "id to be used in zones and record commands")
+	hetznerCmd.Flags().String("name", "", "name to be used in create commands")
+	hetznerCmd.Flags().String("type", "A", "record type")
+	hetznerCmd.Flags().String("value", "", "record value")
+	hetznerCmd.Flags().Int("ttl", 86400, "record ttl")
+	hetznerCmd.Flags().BoolP("create", "", false, "create a zone or record")
 	hetznerCmd.Flags().BoolP("zones", "z", false, "display zones")
-	hetznerCmd.Flags().BoolP("zone", "", false, "display zone")
+	hetznerCmd.Flags().BoolP("records", "r", false, "display records")
+	hetznerCmd.Flags().BoolP("zone", "", false, "zone")
+	hetznerCmd.Flags().BoolP("record", "", false, "record")
+	hetznerCmd.Flags().BoolP("delete", "", false, "delete a zone or record")
 }
 
 // initConfig reads in config file and ENV variables if set.
