@@ -18,6 +18,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 
 	"evalgo.org/evdns"
 	"github.com/spf13/cobra"
@@ -101,8 +102,59 @@ var hetznerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		export, err := cmd.Flags().GetBool("export")
+		if err != nil {
+			return err
+		}
+		validate, err := cmd.Flags().GetBool("validate")
+		if err != nil {
+			return err
+		}
+		zImport, err := cmd.Flags().GetBool("import")
+		if err != nil {
+			return err
+		}
 		h := evdns.NewHetzner(apiURL, token)
 		switch true {
+		case zImport:
+			zFile, err := ioutil.ReadFile(rValue)
+			if err != nil {
+				return err
+			}
+			imported, err := h.ImportZone(ID, zFile)
+			if err != nil {
+				return err
+			}
+			zDetails := imported.(map[string]interface{})["zone"].(map[string]interface{})
+			displayZone(zDetails)
+			return nil
+		case validate:
+			zFile, err := ioutil.ReadFile(rValue)
+			if err != nil {
+				return err
+			}
+			validated, err := h.ValidateZone(zFile)
+			if err != nil {
+				return err
+			}
+			vInfo := validated.(map[string]interface{})
+			fmt.Println("parsed records: ", vInfo["paresd_records"])
+			if pErr, ok := vInfo["error"]; ok {
+				fmt.Println(pErr.(map[string]interface{})["code"], pErr.(map[string]interface{})["message"])
+			} else {
+				for _, vr := range vInfo["valid_records"].([]interface{}) {
+					rInfo := vr.(map[string]interface{})
+					fmt.Println(rInfo["type"], rInfo["name"], rInfo["value"])
+				}
+			}
+			return nil
+		case export:
+			exportFile, err := h.ExportZone(map[string]interface{}{"id": ID})
+			if err != nil {
+				return err
+			}
+			fmt.Println("write zone file to", ID+".zone")
+			return ioutil.WriteFile(ID+".zone", exportFile.([]byte), 0777)
 		case update:
 			switch true {
 			case zone:
@@ -251,6 +303,9 @@ func init() {
 	hetznerCmd.Flags().BoolP("zone", "", false, "zone")
 	hetznerCmd.Flags().BoolP("record", "", false, "record")
 	hetznerCmd.Flags().BoolP("delete", "", false, "delete a zone or record")
+	hetznerCmd.Flags().BoolP("export", "", false, "export a zone to a file")
+	hetznerCmd.Flags().BoolP("import", "", false, "import a zone file")
+	hetznerCmd.Flags().BoolP("validate", "", false, "validate a zone file")
 }
 
 // initConfig reads in config file and ENV variables if set.

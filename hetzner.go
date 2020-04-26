@@ -46,6 +46,17 @@ func dnsRequest(hd *Hetzner, rType string, values url.Values) ([]byte, error) {
 		values.Del("id")
 		method = "PUT"
 		body = []byte(values.Get("body"))
+	case "exportZone":
+		reqURL += "/zones/" + values.Get("id") + "/export"
+		body = nil
+	case "validateZone":
+		reqURL += "/zones/file/validate"
+		method = "POST"
+		body = []byte(values.Get("zone"))
+	case "importZone":
+		reqURL += "/zones/" + values.Get("zone_id") + "/import"
+		method = "POST"
+		body = []byte(values.Get("zone"))
 	case "records":
 		reqURL += "/records?" + values.Encode()
 		body = nil
@@ -73,8 +84,12 @@ func dnsRequest(hd *Hetzner, rType string, values url.Values) ([]byte, error) {
 		return nil, err
 	}
 	switch rType {
-	case "newRecord", "updateZone":
+	case "newRecord", "updateZone", "updateRecord":
 		req.Header.Add("Content-Type", "application/json")
+	case "exportZone":
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+	case "validateZone", "importZone":
+		req.Header.Add("Content-Type", "text/plain")
 	}
 	req.Header.Add("Auth-API-Token", hd.Token)
 	resp, err := client.Do(req)
@@ -166,6 +181,42 @@ func (hd *Hetzner) UpdateZone(zone map[string]interface{}) (interface{}, error) 
 		return nil, err
 	}
 	return update, nil
+}
+
+// ExportZone exports a zone to a file
+func (hd *Hetzner) ExportZone(zone map[string]interface{}) (interface{}, error) {
+	values := url.Values{"id": []string{zone["id"].(string)}}
+	return dnsRequest(hd, "exportZone", values)
+}
+
+// ValidateZone validates a zone file
+func (hd *Hetzner) ValidateZone(zoneFile []byte) (interface{}, error) {
+	values := url.Values{"zone": []string{string(zoneFile)}}
+	validateJSON, err := dnsRequest(hd, "validateZone", values)
+	if err != nil {
+		return nil, err
+	}
+	var validated interface{}
+	err = json.Unmarshal(validateJSON, &validated)
+	if err != nil {
+		return nil, err
+	}
+	return validated, nil
+}
+
+// ImportZone from zone file
+func (hd *Hetzner) ImportZone(zoneID string, zoneFile []byte) (interface{}, error) {
+	values := url.Values{"zone_id": []string{zoneID}, "zone": []string{string(zoneFile)}}
+	importJSON, err := dnsRequest(hd, "importZone", values)
+	if err != nil {
+		return nil, err
+	}
+	var zImport interface{}
+	err = json.Unmarshal(importJSON, &zImport)
+	if err != nil {
+		return nil, err
+	}
+	return zImport, nil
 }
 
 // NewRecord cretes a new record

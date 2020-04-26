@@ -31,6 +31,15 @@ evdns hetzner --delete --zone --id "YOUR-ZONE-ID"
 # update a zone
 evdns hetzner --update --zone --id "YOUR-ZONE-ID" --name "YOUR-ZONE-NAME" --ttl "YOUR-TTL"
 
+# export a zone file
+evdns hetzner --export --id "YOUR-ZONE-ID"
+
+# validate a zone file
+evdns hetzner --validate --value "YOUR-ZONE-ID-FILE-PATH.zone"
+
+# import a zone file
+evdns hetzner --import --id "YOUR-ZONE-ID" --value "YOUR-ZONE-ID-FILE-PATH.zone"
+
 # display records for a given zone
 evdns hetzner -r --id "YOUR-ZONE-ID"
 
@@ -56,9 +65,9 @@ evdns --update --record --rid YOUR-RECORD-ID --id YOUR-ZONE-ID --type "A" --name
 - [x] create zone
 - [x] delete zone
 - [x] update a zone
-- [ ] validate zone file plain
-- [ ] import zone file plain
-- [ ] export zone file plain
+- [x] validate zone file plain
+- [x] import zone file plain
+- [x] export zone file plain
 - records
 - [x] display records for a given zone
 - [x] display a record with a given record id
