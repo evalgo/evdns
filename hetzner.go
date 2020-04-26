@@ -71,8 +71,16 @@ func dnsRequest(hd *Hetzner, rType string, values url.Values) ([]byte, error) {
 		reqURL += "/records"
 		method = "POST"
 		body = []byte(values.Get("body"))
+	case "newRecords":
+		reqURL += "/records/bulk"
+		method = "POST"
+		body = []byte(values.Get("body"))
 	case "updateRecord":
 		reqURL += "/records/" + values.Get("id")
+		method = "PUT"
+		body = []byte(values.Get("body"))
+	case "updateRecords":
+		reqURL += "/records/bulk"
 		method = "PUT"
 		body = []byte(values.Get("body"))
 	default:
@@ -84,7 +92,7 @@ func dnsRequest(hd *Hetzner, rType string, values url.Values) ([]byte, error) {
 		return nil, err
 	}
 	switch rType {
-	case "newRecord", "updateZone", "updateRecord":
+	case "newRecord", "newRecords", "updateZone", "updateRecord", "updateRecords":
 		req.Header.Add("Content-Type", "application/json")
 	case "exportZone":
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
@@ -238,6 +246,26 @@ func (hd *Hetzner) NewRecord(record map[string]interface{}) (interface{}, error)
 	return create, nil
 }
 
+// NewRecords cretes new records
+func (hd *Hetzner) NewRecords(records interface{}) (interface{}, error) {
+	// todo some records checks
+	bodyJSON, err := json.Marshal(records)
+	if err != nil {
+		return nil, err
+	}
+	values := url.Values{"body": []string{string(bodyJSON)}}
+	createJSON, err := dnsRequest(hd, "newRecords", values)
+	if err != nil {
+		return nil, err
+	}
+	var create interface{}
+	err = json.Unmarshal(createJSON, &create)
+	if err != nil {
+		return nil, err
+	}
+	return create, nil
+}
+
 // Records returns all records for a given zoneID
 func (hd *Hetzner) Records(zoneID string) (interface{}, error) {
 	recordsJSON, err := dnsRequest(hd, "records", url.Values{"zone_id": []string{zoneID}})
@@ -291,6 +319,26 @@ func (hd *Hetzner) UpdateRecord(record map[string]interface{}) (interface{}, err
 	values := url.Values{"body": []string{string(bodyJSON)}}
 	values.Add("id", id)
 	updateJSON, err := dnsRequest(hd, "updateRecord", values)
+	if err != nil {
+		return nil, err
+	}
+	var update interface{}
+	err = json.Unmarshal(updateJSON, &update)
+	if err != nil {
+		return nil, err
+	}
+	return update, nil
+}
+
+// UpdateRecords updates records
+func (hd *Hetzner) UpdateRecords(records interface{}) (interface{}, error) {
+	// todo some records checks
+	bodyJSON, err := json.Marshal(records)
+	if err != nil {
+		return nil, err
+	}
+	values := url.Values{"body": []string{string(bodyJSON)}}
+	updateJSON, err := dnsRequest(hd, "updateRecords", values)
 	if err != nil {
 		return nil, err
 	}

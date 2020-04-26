@@ -55,6 +55,12 @@ evdns --delete --record --id YOUR-RECORD-ID
 # update a record for a given zone
 evdns --update --record --rid YOUR-RECORD-ID --id YOUR-ZONE-ID --type "A" --name "YOUR-SUBDOMAIN" --value "YOUR-IP-ADDRESS"
 
+# create records
+evdns --create --records --value '{"records": [{"value": "YOUR-IP-VALUE","type": "A","name": "YOUR-NAME","zone_id": "YOUR-ZONE-ID"}]}'
+
+# update records
+evdns --update --records --value '{"records": [{"id":"YOUR-RECORD-ID","value": "YOUR-IP-VALUE","type": "A","name": "YOUR-NAME","zone_id": "YOUR-ZONE-ID"}]}'
+
 ```
 
 ### features implemented
@@ -74,5 +80,5 @@ evdns --update --record --rid YOUR-RECORD-ID --id YOUR-ZONE-ID --type "A" --name
 - [x] create record for a given zone
 - [x] delete a record with a give record id
 - [x] update a record
-- [ ] bulk create records
-- [ ] bulk update records
+- [x] bulk create records
+- [x] bulk update records

@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -180,6 +181,27 @@ var hetznerCmd = &cobra.Command{
 				rDetails := updated.(map[string]interface{})["record"].(map[string]interface{})
 				displayRecord(rDetails)
 				return nil
+			case records:
+				var records interface{}
+				err := json.Unmarshal([]byte(rValue), &records)
+				if err != nil {
+					return err
+				}
+				updated, err := h.UpdateRecords(records)
+				if err != nil {
+					return err
+				}
+				rInfo := updated.(map[string]interface{})
+				fmt.Println("parsed records: ", len(rInfo["records"].([]interface{})))
+				if pErr, ok := rInfo["error"]; ok {
+					fmt.Println(pErr.(map[string]interface{})["code"], pErr.(map[string]interface{})["message"])
+				} else {
+					for _, vr := range rInfo["records"].([]interface{}) {
+						rrInfo := vr.(map[string]interface{})
+						fmt.Println(rrInfo["type"], rrInfo["name"], rrInfo["value"])
+					}
+				}
+				return nil
 			}
 		case create:
 			switch true {
@@ -203,6 +225,28 @@ var hetznerCmd = &cobra.Command{
 					return err
 				}
 				displayRecord(created.(map[string]interface{})["record"].(map[string]interface{}))
+				return nil
+			case records:
+				var records interface{}
+				err := json.Unmarshal([]byte(rValue), &records)
+				if err != nil {
+					return err
+				}
+				created, err := h.NewRecords(records)
+				if err != nil {
+					return err
+				}
+
+				rInfo := created.(map[string]interface{})
+				fmt.Println("parsed records: ", len(rInfo["records"].([]interface{})))
+				if pErr, ok := rInfo["error"]; ok {
+					fmt.Println(pErr.(map[string]interface{})["code"], pErr.(map[string]interface{})["message"])
+				} else {
+					for _, vr := range rInfo["records"].([]interface{}) {
+						rrInfo := vr.(map[string]interface{})
+						fmt.Println(rrInfo["type"], rrInfo["name"], rrInfo["value"])
+					}
+				}
 				return nil
 			}
 		case del:
