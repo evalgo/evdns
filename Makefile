@@ -7,6 +7,11 @@ test:
 	go get -v
 	go test -v -run=Test_Unit 2>&1 | ./go-junit-report > report.xml
 
+service:
+	GOOS=linux GOARCH=amd64 go build -o evdns-service.linux.amd64 cmd/evdns-service/main.go
+	GOOS=darwin GOARCH=amd64 go build -o evdns-service.darwin.amd64 cmd/evdns-service/main.go
+	GOOS=windows GOARCH=amd64 go build -o evdns-service.windows.amd64.exe cmd/evdns-service/main.go
+
 cli:
 	GOOS=linux GOARCH=amd64 go build -o evdns.linux.amd64 cmd/evdns/main.go
 	GOOS=darwin GOARCH=amd64 go build -o evdns.darwin.amd64 cmd/evdns/main.go
@@ -14,7 +19,6 @@ cli:
 
 .PHONY: clean 
 clean:
-	rm -fv evdns.*.amd64 evdns.*.amd64.exe
+	rm -fv evdns.*.amd64 evdns.*.amd64.exe evdns-service.*.amd64 evdns-service.*.amd64.exe
 	find . -name "*~" | xargs rm -fv
 	rm -fv go-junit-report report.xml
-

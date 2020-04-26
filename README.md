@@ -11,7 +11,27 @@ go get evalgo.org/evdns/cmd/evdns
 
 ## Hetzner
 
-### hetzner usage
+### features implemented
+- zones
+- [x] display zone id and name
+- [x] display most zone info
+- [x] display a zone with a given zone id
+- [x] create zone
+- [x] delete zone
+- [x] update a zone
+- [x] validate zone file plain
+- [x] import zone file plain
+- [x] export zone file plain
+- records
+- [x] display records for a given zone
+- [x] display a record with a given record id
+- [x] create record for a given zone
+- [x] delete a record with a give record id
+- [x] update a record
+- [x] bulk create records
+- [x] bulk update records
+
+### hetzner cli usage
 ```
 # first create a evdns.json configuration file
 echo '{"url":"https://dns.hetzner.com/api/v1","token":"YOUR-HETZNER-DNS-TOKEN"}' > evdns.json
@@ -60,25 +80,18 @@ evdns --create --records --value '{"records": [{"value": "YOUR-IP-VALUE","type":
 
 # update records
 evdns --update --records --value '{"records": [{"id":"YOUR-RECORD-ID","value": "YOUR-IP-VALUE","type": "A","name": "YOUR-NAME","zone_id": "YOUR-ZONE-ID"}]}'
-
 ```
 
-### features implemented
-- zones
-- [x] display zone id and name
-- [x] display most zone info
-- [x] display a zone with a given zone id
-- [x] create zone
-- [x] delete zone
-- [x] update a zone
-- [x] validate zone file plain
-- [x] import zone file plain
-- [x] export zone file plain
-- records
-- [x] display records for a given zone
-- [x] display a record with a given record id
-- [x] create record for a given zone
-- [x] delete a record with a give record id
-- [x] update a record
-- [x] bulk create records
-- [x] bulk update records
+### hetzner service usage
+```
+# first create a evdns-service.json configuration file
+echo '{"url":"https://dns.hetzner.com/api/v1","token":"YOUR-HETZNER-DNS-TOKEN","webroot":"./webroot","address":":8888"}' > evdns-service.json
+
+# start the evdns-service websocket server
+evdns-service start
+
+# download./install the evmsg-js websocket client
+
+# use the evmsg-js client to display the zones
+
+```
