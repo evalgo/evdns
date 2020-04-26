@@ -3,7 +3,6 @@ package evdns
 import (
 	"bytes"
 	"encoding/json"
-	//"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -42,6 +41,11 @@ func dnsRequest(hd *Hetzner, rType string, values url.Values) ([]byte, error) {
 		reqURL += "/zones"
 		method = "POST"
 		body = []byte(values.Get("body"))
+	case "updateZone":
+		reqURL += "/zones/" + values.Get("id")
+		values.Del("id")
+		method = "PUT"
+		body = []byte(values.Get("body"))
 	case "records":
 		reqURL += "/records?" + values.Encode()
 		body = nil
@@ -56,6 +60,10 @@ func dnsRequest(hd *Hetzner, rType string, values url.Values) ([]byte, error) {
 		reqURL += "/records"
 		method = "POST"
 		body = []byte(values.Get("body"))
+	case "updateRecord":
+		reqURL += "/records/" + values.Get("id")
+		method = "PUT"
+		body = []byte(values.Get("body"))
 	default:
 		body = []byte(values.Encode())
 	}
@@ -64,7 +72,8 @@ func dnsRequest(hd *Hetzner, rType string, values url.Values) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if rType == "newRecord" {
+	switch rType {
+	case "newRecord", "updateZone":
 		req.Header.Add("Content-Type", "application/json")
 	}
 	req.Header.Add("Auth-API-Token", hd.Token)
@@ -137,6 +146,28 @@ func (hd *Hetzner) DeleteZone(zoneID string) (interface{}, error) {
 	return zoneDeleted, nil
 }
 
+// UpdateZone updates a zone
+func (hd *Hetzner) UpdateZone(zone map[string]interface{}) (interface{}, error) {
+	id := zone["id"].(string)
+	delete(zone, "id")
+	bodyJSON, err := json.Marshal(zone)
+	if err != nil {
+		return nil, err
+	}
+	values := url.Values{"body": []string{string(bodyJSON)}}
+	values.Add("id", id)
+	updateJSON, err := dnsRequest(hd, "updateZone", values)
+	if err != nil {
+		return nil, err
+	}
+	var update interface{}
+	err = json.Unmarshal(updateJSON, &update)
+	if err != nil {
+		return nil, err
+	}
+	return update, nil
+}
+
 // NewRecord cretes a new record
 func (hd *Hetzner) NewRecord(record map[string]interface{}) (interface{}, error) {
 	bodyJSON, err := json.Marshal(record)
@@ -196,4 +227,26 @@ func (hd *Hetzner) DeleteRecord(recordID string) (interface{}, error) {
 		return nil, err
 	}
 	return deleted, nil
+}
+
+// UpdateRecord cretes a new record
+func (hd *Hetzner) UpdateRecord(record map[string]interface{}) (interface{}, error) {
+	id := record["id"].(string)
+	delete(record, "id")
+	bodyJSON, err := json.Marshal(record)
+	if err != nil {
+		return nil, err
+	}
+	values := url.Values{"body": []string{string(bodyJSON)}}
+	values.Add("id", id)
+	updateJSON, err := dnsRequest(hd, "updateRecord", values)
+	if err != nil {
+		return nil, err
+	}
+	var update interface{}
+	err = json.Unmarshal(updateJSON, &update)
+	if err != nil {
+		return nil, err
+	}
+	return update, nil
 }

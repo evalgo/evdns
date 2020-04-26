@@ -69,6 +69,10 @@ var hetznerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		rID, err := cmd.Flags().GetString("rid")
+		if err != nil {
+			return err
+		}
 		create, err := cmd.Flags().GetBool("create")
 		if err != nil {
 			return err
@@ -93,8 +97,38 @@ var hetznerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		update, err := cmd.Flags().GetBool("update")
+		if err != nil {
+			return err
+		}
 		h := evdns.NewHetzner(apiURL, token)
 		switch true {
+		case update:
+			switch true {
+			case zone:
+				updated, err := h.UpdateZone(map[string]interface{}{"name": name, "ttl": rTTL, "id": ID})
+				if err != nil {
+					return err
+				}
+				zDetails := updated.(map[string]interface{})["zone"].(map[string]interface{})
+				displayZone(zDetails)
+				return nil
+			case record:
+				updated, err := h.UpdateRecord(map[string]interface{}{
+					"id":      rID,
+					"zone_id": ID,
+					"type":    rType,
+					"name":    name,
+					"value":   rValue,
+					"ttl":     rTTL,
+				})
+				if err != nil {
+					return err
+				}
+				rDetails := updated.(map[string]interface{})["record"].(map[string]interface{})
+				displayRecord(rDetails)
+				return nil
+			}
 		case create:
 			switch true {
 			case zone:
@@ -180,7 +214,7 @@ var hetznerCmd = &cobra.Command{
 }
 
 func displayRecord(rDetails map[string]interface{}) {
-	fmt.Println(rDetails["zone_id"], rDetails["id"], rDetails["type"], rDetails["name"], rDetails["value"])
+	fmt.Println(rDetails["zone_id"], rDetails["id"], rDetails["type"], rDetails["name"], rDetails["value"], rDetails["ttl"])
 }
 
 func displayZone(zDetails map[string]interface{}) {
@@ -205,11 +239,13 @@ func init() {
 	hetznerCmd.Flags().String("url", "https://dns.hetzner.com/api/v1", "url to be used for api calls")
 	hetznerCmd.Flags().String("token", "", "token to be used for api authorization")
 	hetznerCmd.Flags().String("id", "", "id to be used in zones and record commands")
+	hetznerCmd.Flags().String("rid", "", "id to be used in the record update command")
 	hetznerCmd.Flags().String("name", "", "name to be used in create commands")
 	hetznerCmd.Flags().String("type", "A", "record type")
 	hetznerCmd.Flags().String("value", "", "record value")
 	hetznerCmd.Flags().Int("ttl", 86400, "record ttl")
 	hetznerCmd.Flags().BoolP("create", "", false, "create a zone or record")
+	hetznerCmd.Flags().BoolP("update", "", false, "update a zone or record")
 	hetznerCmd.Flags().BoolP("zones", "z", false, "display zones")
 	hetznerCmd.Flags().BoolP("records", "r", false, "display records")
 	hetznerCmd.Flags().BoolP("zone", "", false, "zone")

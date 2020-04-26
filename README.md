@@ -28,6 +28,9 @@ evdns hetzner --create --zone --name "YOUR-ZONE-NAME"
 # delete a zone
 evdns hetzner --delete --zone --id "YOUR-ZONE-ID"
 
+# update a zone
+evdns hetzner --update --zone --id "YOUR-ZONE-ID" --name "YOUR-ZONE-NAME" --ttl "YOUR-TTL"
+
 # display records for a given zone
 evdns hetzner -r --id "YOUR-ZONE-ID"
 
@@ -40,6 +43,9 @@ evdns --create --record --id YOUR-ZONE-ID --type "A" --name "YOUR-SUBDOMAIN" --v
 # delete a record with a given id
 evdns --delete --record --id YOUR-RECORD-ID
 
+# update a record for a given zone
+evdns --update --record --rid YOUR-RECORD-ID --id YOUR-ZONE-ID --type "A" --name "YOUR-SUBDOMAIN" --value "YOUR-IP-ADDRESS"
+
 ```
 
 ### features implemented
@@ -49,7 +55,7 @@ evdns --delete --record --id YOUR-RECORD-ID
 - [x] display a zone with a given zone id
 - [x] create zone
 - [x] delete zone
-- [ ] update a zone
+- [x] update a zone
 - [ ] validate zone file plain
 - [ ] import zone file plain
 - [ ] export zone file plain
@@ -58,6 +64,6 @@ evdns --delete --record --id YOUR-RECORD-ID
 - [x] display a record with a given record id
 - [x] create record for a given zone
 - [x] delete a record with a give record id
-- [ ] update a record
+- [x] update a record
 - [ ] bulk create records
 - [ ] bulk update records
