@@ -11,7 +11,7 @@ go get evalgo.org/evdns/cmd/evdns
 
 ## Hetzner
 
-### hetzner usage
+### hetzner cli usage
 ```
 # first create a evdns.json configuration file
 echo '{"url":"https://dns.hetzner.com/api/v1","token":"YOUR-HETZNER-DNS-TOKEN"}' > evdns.json
@@ -60,6 +60,33 @@ evdns --create --records --value '{"records": [{"value": "YOUR-IP-VALUE","type":
 
 # update records
 evdns --update --records --value '{"records": [{"id":"YOUR-RECORD-ID","value": "YOUR-IP-VALUE","type": "A","name": "YOUR-NAME","zone_id": "YOUR-ZONE-ID"}]}'
+
+```
+
+### hetzner service usage
+
+```
+# start the service
+./evdns-service.{OS}.{ARCH} start --token "{YOUR-HETZNER-DNS-TOKEN}" --address "0.0.0.0:8989"
+
+# evmsg-js frontend example display all available zones
+var connID = EVMsg.login({
+	id:"evdns",
+	scope:"Login",
+	command:"getToken",
+	secret:"secret",
+	url:"ws://127.0.0.1:8989/v0.0.1/ws",
+	onSuccess:function(resp){
+		EVMsg.send(connID, EVMsg.newMessage({
+		token:resp.data[0].token,
+		scope:"Dns",
+		command:"getZones"
+	}),
+	function(resp){
+		// display the zones response
+		console.log(resp)
+	});
+}});
 
 ```
 

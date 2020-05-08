@@ -9,6 +9,7 @@
 go-junit-report
 report.xml
 evdns.*.amd64
+webroot
 
 # Test binary, built with `go test -c`
 *.test

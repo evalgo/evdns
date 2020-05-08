@@ -14,6 +14,14 @@ type Hetzner struct {
 	ApiURL string
 	// Token is needed for authorization
 	Token string
+	// Websocket address
+	WSAddress string
+	// Websocket client ID
+	WSClient string
+	// Websocket client secret
+	WSSecret string
+	// Webocket webroot folder
+	WSWebroot string
 }
 
 // NewHetzner returns a Hetzner object witht the given api url and token
