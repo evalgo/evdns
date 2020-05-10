@@ -59,87 +59,94 @@ func (h *Hetzner) WSStart(address, client, secret, webroot string) error {
 						case "deleteRecord":
 							msg.State = "Response"
 							msg.Debug.Info = "Dns::deleteRecord"
-							record, err := h.DeleteRecord(msg.Data.([]interface{})[0].(map[string]interface{})["id"].(string))
+							err = evmsg.CheckRequiredKeys(&msg, []string{"id"})
 							if err != nil {
 								c.Logger().Error(err)
+								msg.Debug.Error = err.Error()
+							} else {
+								record, err := h.DeleteRecord(msg.Value("id").(string))
+								if err != nil {
+									c.Logger().Error(err)
+									msg.Debug.Error = err.Error()
+								} else {
+									msg.Data = []interface{}{record.(map[string]interface{})["record"]}
+								}
 							}
-							c.Logger().Info("===>", record)
-							c.Logger().Info("record::", record.(map[string]interface{})["record"])
-							msg.Data = []interface{}{record.(map[string]interface{})["record"]}
 						case "createRecord":
 							msg.State = "Response"
 							msg.Debug.Info = "Dns::createRecord"
-							record, err := h.NewRecord(msg.Data.([]interface{})[0].(map[string]interface{}))
+							record, err := h.NewRecord(msg.Values())
 							if err != nil {
 								c.Logger().Error(err)
+								msg.Debug.Error = err.Error()
+							} else {
+								msg.Data = []interface{}{record.(map[string]interface{})["record"]}
 							}
-							c.Logger().Info("===>", record)
-							c.Logger().Info("record::", record.(map[string]interface{})["record"])
-							msg.Data = []interface{}{record.(map[string]interface{})["record"]}
 						case "getRecord":
 							msg.State = "Response"
 							msg.Debug.Info = "Dns::getRecord"
-							record, err := h.Record(msg.Data.([]interface{})[0].(map[string]interface{})["id"].(string))
+							record, err := h.Record(msg.Value("id").(string))
 							if err != nil {
 								c.Logger().Error(err)
+								msg.Debug.Error = err.Error()
+							} else {
+								msg.Data = []interface{}{record.(map[string]interface{})["record"]}
 							}
-							c.Logger().Info("===>", record)
-							c.Logger().Info("record::", record.(map[string]interface{})["record"])
-							msg.Data = []interface{}{record.(map[string]interface{})["record"]}
 						case "getRecords":
 							msg.State = "Response"
 							msg.Debug.Info = "Dns::getRecords"
-							records, err := h.Records(msg.Data.([]interface{})[0].(map[string]interface{})["id"].(string))
+							records, err := h.Records(msg.Value("id").(string))
 							if err != nil {
 								c.Logger().Error(err)
+								msg.Debug.Error = err.Error()
+							} else {
+								msg.Data = records.(map[string]interface{})["records"]
 							}
-							c.Logger().Info("records::", records.(map[string]interface{})["records"])
-							msg.Data = records.(map[string]interface{})["records"]
-							// -------- ZONES ------
 						case "deleteZone":
 							msg.State = "Response"
 							msg.Debug.Info = "Dns::deleteZone"
-							record, err := h.DeleteZone(msg.Data.([]interface{})[0].(map[string]interface{})["id"].(string))
+							record, err := h.DeleteZone(msg.Value("id").(string))
 							if err != nil {
 								c.Logger().Error(err)
+								msg.Debug.Error = err.Error()
+							} else {
+								msg.Data = []interface{}{record.(map[string]interface{})["zone"]}
 							}
-							c.Logger().Info("===>", record)
-							c.Logger().Info("zone::", record.(map[string]interface{})["zone"])
-							msg.Data = []interface{}{record.(map[string]interface{})["zone"]}
 						case "createZone":
 							msg.State = "Response"
 							msg.Debug.Info = "Dns::createZone"
-							record, err := h.NewZone(msg.Data.([]interface{})[0].(map[string]interface{}))
+							record, err := h.NewZone(msg.Values())
 							if err != nil {
 								c.Logger().Error(err)
+								msg.Debug.Error = err.Error()
+							} else {
+								msg.Data = []interface{}{record.(map[string]interface{})["zone"]}
 							}
-							c.Logger().Info("===>", record)
-							c.Logger().Info("zone::", record.(map[string]interface{})["zone"])
-							msg.Data = []interface{}{record.(map[string]interface{})["zone"]}
 						case "getZone":
 							msg.State = "Response"
 							msg.Debug.Info = "Dns::getZone"
-							record, err := h.Zone(msg.Data.([]interface{})[0].(map[string]interface{})["id"].(string))
+							record, err := h.Zone(msg.Value("id").(string))
 							if err != nil {
 								c.Logger().Error(err)
+								msg.Debug.Error = err.Error()
+							} else {
+								msg.Data = []interface{}{record.(map[string]interface{})["zone"]}
 							}
-							c.Logger().Info("===>", record)
-							c.Logger().Info("zone::", record.(map[string]interface{})["zone"])
-							msg.Data = []interface{}{record.(map[string]interface{})["zone"]}
 						case "getZones":
 							msg.State = "Response"
 							msg.Debug.Info = "Dns::getZones"
 							zones, err := h.Zones()
 							if err != nil {
 								c.Logger().Error(err)
-							}
-							if zns, ok := zones.(map[string]interface{})["zones"]; ok {
-								msg.Data = zns
+								msg.Debug.Error = err.Error()
 							} else {
-								msg.Debug.Error = zones.(map[string]interface{})["message"].(string)
-								msg.Data = []interface{}{}
+								if zns, ok := zones.(map[string]interface{})["zones"]; ok {
+									msg.Data = zns
+								} else {
+									msg.Debug.Error = zones.(map[string]interface{})["message"].(string)
+									msg.Data = []interface{}{}
+								}
 							}
-							c.Logger().Info(msg.Data)
 						default:
 							// do something here
 						}
